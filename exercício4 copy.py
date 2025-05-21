@@ -1,4 +1,3 @@
-# Menu principal é um dicionario onde onde exibe caba valor
 menu = {
     1: "Cadastrar Usuário",
     2: "Login do usuário",
@@ -8,6 +7,7 @@ menu = {
 usuario_logado = False
 musicas_curtidas = {}
 musicas_descurtidas = {}
+nome_usuario_logado = None
 
 def main():
     while True: 
@@ -58,6 +58,7 @@ def login_usuario():
     :return: None
     """
     global usuario_logado
+    global nome_usuario_logado
     print("Logar Usuário:")
     nome_procurar = input("Nome:")
     email_procurar = input("Email:")
@@ -71,7 +72,7 @@ def login_usuario():
         nome, email, senha= linha.strip().split(",") # Divide a linha em partes, separando por vírgula
         if nome_procurar.lower() == nome.lower() and email_procurar.lower() == email.lower() and senha_procurar.lower() == senha.lower(): # Verifica se o nome procurado é igual ao nome do contato, ignorando maiúsculas e minúsculas
             usuario_logado = True
-            print(usuario_logado)
+            nome_usuario_logado = nome
             print(f"Nome: {nome}, E-mail: {email}")
             print("Usuario logado")
             menu_log()
@@ -83,7 +84,8 @@ menu_logado = {
     1: "Buscar Músicas",
     2: "Curtir música",
     3: "Descurtir música",
-    4: "Visualizar histórico",
+    4: "Gerenciar playlists",
+    5: "Visualizar histórico",
     0: "Sair"
 }
 
@@ -97,6 +99,8 @@ def menu_log():
         elif escolha == 3:
             descurtir_musica()
         elif escolha == 4:
+            gerenciar_playlists()
+        elif escolha == 5:
             visualizar_historico()
         elif escolha == 0:
             print("Saindo do Spotifei...")
@@ -185,8 +189,8 @@ def descurtir_musica():
             nome_musica, nome_artista, duracao = linha.strip().split(",")
             if nome_procurar.lower() == nome_musica.lower():
                 print(f"Nome: {nome_musica}, Artista: {nome_artista}, Duração: {duracao}")
-                resposta = input("Deseja descurtir essa música? [s/n]: ")
-                if resposta == "s":
+                resposta = input("Deseja descurtir essa música? [S/N]: ")
+                if resposta == "S":
                     if usuario_logado not in musicas_descurtidas:
                         musicas_curtidas[usuario_logado] = set()  # cria conjunto vazio
 
@@ -203,13 +207,199 @@ def descurtir_musica():
         if not encontrado:
             print("Música não encontrada.")
 
+def gerenciar_playlists():
+    while True:
+        print("Gerenciar Playlist:")
+        print("1 - Criar playlist")
+        print("2 - Excluir playlist")
+        print("3 - Adicionar música")
+        print("4 - Remover música")
+        print("5 - Ver playlists")
+        print("0 - Voltar")
+        escolha = int(input("Escolha: "))
+        if escolha == 1:
+            criar_play()
+        elif escolha == 2:
+            excluir_play()
+        elif escolha == 3:
+            add_musica_play()
+        elif escolha == 4:
+            remove_musica_play()
+        elif escolha == 5:
+            visualizar_play()
+        elif escolha == 0:
+            print("Voltando...")
+            break
+        else:
+            print("Opção Indisponível.")
+
+
+def criar_play():
+    """
+    Função para cadastrar um novo contato à agenda.
+    """
+    global nome_usuario_logado
+    print("Nova playlist:")
+    nome_playlist = input("Digite o nome: ")
+    # Abre o arquivo contatos.txt para escrita. Modo "a" para adicionar ao final do arquivo
+    arquivo_playlist = open("playlists.txt", "a")
+    # Grava o contato no arquivo
+    arquivo_playlist.write(f"{nome_usuario_logado},{nome_playlist}") # Grava o contato no arquivo, separando os dados por vírgula
+    # Fecha o arquivo
+    arquivo_playlist.close()
+    print("Playlist") # Mensagem de sucesso
+
+def excluir_play():
+    """
+    Apaga um contato da agenda.
+    :return: None
+    """
+    nome_apagar = input("Digite o nome do play que deseja apagar: ")
+    # Abre o arquivo contatos.txt para leitura
+    arquivo_playlist = open("playlists.txt", "r")
+    # Lê o conteúdo do arquivo
+    conteudo = arquivo_playlist.readlines()
+    # Fecha o arquivo
+    arquivo_playlist.close()
+    # Procura o contato no arquivo
+    for i, linha in enumerate(conteudo):
+        nome = linha.strip().split(",")
+        if nome_apagar.lower() == nome.lower():
+            print(f"Contato encontrado: {linha.strip()}")
+            # Remove o contato da lista
+            conteudo.pop(i)
+            break
+    else: # Se não encontrar o contato
+        print("play não encontrado.")
+
+def add_musica_play():
+    global nome_usuario_logado
+    print("Adicionar música à playlist:")
+    nome_playlist = input("Digite o nome da playlist: ").strip()
+    nome_musica = input("Digite o nome da música que deseja adicionar: ").strip()
+
+    # Verifica se a música existe em musicas.txt
+    with open("musicas.txt", "r") as arquivo_musica:
+        musicas_disponiveis = [linha.strip().split(",")[0].lower() for linha in arquivo_musica]
+
+    if nome_musica.lower() not in musicas_disponiveis:
+        print("Música não encontrada no banco de músicas.")
+        return
+
+    # Lê as playlists
+    with open("playlists.txt", "r") as arquivo_playlist:
+        conteudo = arquivo_playlist.readlines()
+
+    # Procura a playlist do usuário logado
+    for i, linha in enumerate(conteudo):
+        partes = linha.strip().split(",")
+        if len(partes) < 2:
+            continue
+
+        nome_usuario, playlist = partes[0], partes[1]
+        musicas = partes[2:]
+
+        if nome_usuario == nome_usuario_logado and playlist == nome_playlist:
+            if nome_musica in musicas:
+                print("A música já está na playlist.")
+            else:
+                musicas.append(nome_musica)
+                conteudo[i] = f"{nome_usuario},{playlist}," + ",".join(musicas) + "\n"
+                print("Música adicionada com sucesso.")
+            break
+    else:
+        print("Playlist não encontrada ou você não é o dono.")
+
+    # Salva a playlist atualizada
+    with open("playlists.txt", "w") as arquivo:
+        arquivo.writelines(conteudo)
+
+
+def remove_musica_play():
+    global nome_usuario_logado
+    print("Remover música da playlist:")
+    nome_playlist = input("Digite o nome da playlist: ").strip()
+    nome_musica = input("Digite o nome da música que deseja remover: ").strip()
+
+    # Lê as playlists
+    with open("playlists.txt", "r") as arquivo_playlist:
+        conteudo = arquivo_playlist.readlines()
+
+    # Procura a playlist do usuário logado
+    for i, linha in enumerate(conteudo):
+        partes = linha.strip().split(",")
+        if len(partes) < 2:
+            continue
+
+        nome_usuario, playlist = partes[0], partes[1]
+        musicas = partes[2:]
+
+        if nome_usuario == nome_usuario_logado and playlist == nome_playlist:
+            if nome_musica in musicas:
+                musicas.remove(nome_musica)
+                conteudo[i] = f"{nome_usuario},{playlist}," + ",".join(musicas) + "\n"
+                print("Música removida com sucesso.")
+            else:
+                print("A música não está na playlist.")
+            break
+    else:
+        print("Playlist não encontrada ou você não é o dono.")
+
+    # Salva a playlist atualizada
+    with open("playlists.txt", "w") as arquivo:
+        arquivo.writelines(conteudo)
+
+def visualizar_play():
+    global nome_usuario_logado
+    print("Buscar playlist:")
+    nome_procurar = input("Digite o nome da playlist: ").strip()
+
+    encontrada = False
+
+    with open("playlists.txt", "r") as arquivo:
+        linhas = arquivo.readlines()
+
+    for linha in linhas:
+        partes = linha.strip().split(",")
+
+        if len(partes) < 2:
+            continue
+
+        nome_usuario = partes[0]
+        nome_playlist = partes[1]
+        musicas = partes[2:]
+
+        if nome_usuario == nome_usuario_logado and nome_playlist.lower() == nome_procurar.lower():
+            print(f"\nPlaylist: {nome_playlist}")
+            if musicas:
+                print("Músicas:")
+                for musica in musicas:
+                    print(f"- {musica}")
+            else:
+                print("Essa playlist está vazia.")
+            encontrada = True
+            break
+
+    if not encontrada:
+        print("Playlist não encontrada ou não pertence a você.")
 
 def visualizar_historico():
-    escolha = str(input("Visualizar musicas curtidas(C) ou descurtidas(D): "))
-    if escolha == "C":
-        listar_musicas_curtidas()
-    else:
-        listar_musicas_descurtidas()
+    print("Visualizar Historico:")
+    print("1 - Visualizar musicas curtidas")
+    print("2 - Visualizar musicas Descurtidas")
+    print("0 - voltar")
+    escolha = int(input("Escolha: "))
+    while True:
+        if escolha == 1:
+            listar_musicas_curtidas()
+        elif escolha == 2:
+            listar_musicas_descurtidas()
+        elif escolha == 0:
+            print("Voltando")
+            break
+        else:
+            print("Opção Indisponível.")
+        
 
 def listar_musicas_curtidas():
     global usuario_logado
