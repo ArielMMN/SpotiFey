@@ -2,10 +2,6 @@
 menu = {
     1: "Cadastrar Usuário",
     2: "Login do usuário",
-    3: "Buscar Músicas",
-    4: "Curtir música",
-    5: "Descurtir música",
-    6: "Visualizar histórico",
     0: "Sair"
 }
 
@@ -19,15 +15,7 @@ def main():
         if escolha == 1:
             cadastrar_usuario()
         elif escolha == 2:
-            login_usuario()
-        elif escolha == 3:
-            buscar_musica()
-        elif escolha == 4:
-            curtir_musica()
-        elif escolha == 5:
-            descurtir_musica()
-        elif escolha == 6:
-            visualizar_historico()   
+            login_usuario()  
         elif escolha == 0:
             print("Saindo do Spotifei...")
             break
@@ -86,9 +74,47 @@ def login_usuario():
             print(usuario_logado)
             print(f"Nome: {nome}, E-mail: {email}")
             print("Usuario logado")
+            menu_log()
             break # Sai do loop se o contato for encontrado
     else: # Se não encontrar o contato
         print("Contato não encontrado.") # Mensagem de erro se o contato não for encontrado
+
+menu_logado = {
+    1: "Buscar Músicas",
+    2: "Curtir música",
+    3: "Descurtir música",
+    4: "Visualizar histórico",
+    0: "Sair"
+}
+
+def menu_log():
+    while True: 
+        escolha = exibir_menu_logado()
+        if escolha == 1:
+            buscar_musica()
+        elif escolha == 2:
+            curtir_musica()
+        elif escolha == 3:
+            descurtir_musica()
+        elif escolha == 4:
+            visualizar_historico()
+        elif escolha == 0:
+            print("Saindo do Spotifei...")
+            break
+        else:
+            print("Opção Indisponível.")
+
+
+def exibir_menu_logado():
+    """
+    Função para exibir o menu de opções e retornar a escolha do usuário.
+    :return: Opção escolhida pelo usuário.
+    """
+    print("Menu:")
+    for opcao, descricao in menu_logado.items():
+        print(f"{opcao} - {descricao}")
+    escolha = int(input("Escolha uma opção: ")) # Lê a opção escolhida pelo usuário, sem validar
+    return escolha # Retorna a opção escolhida
 
 def buscar_musica():
     """
@@ -143,8 +169,6 @@ def curtir_musica():
 
         if not encontrado:
             print("Música não encontrada.")
-    else:
-        print("Você precisa fazer o login!")
 
 
 def descurtir_musica():
@@ -178,8 +202,14 @@ def descurtir_musica():
 
         if not encontrado:
             print("Música não encontrada.")
+
+
+def visualizar_historico():
+    escolha = str(input("Visualizar musicas curtidas(C) ou descurtidas(D): "))
+    if escolha == "C":
+        listar_musicas_curtidas()
     else:
-        print("Você precisa fazer o login!")
+        listar_musicas_descurtidas()
 
 def listar_musicas_curtidas():
     global usuario_logado
@@ -190,8 +220,6 @@ def listar_musicas_curtidas():
                 print(f"- {musica}")
         else:
             print("Você ainda não curtiu nenhuma música.")
-    else:
-        print("Você precisa fazer o login!")
 
 def listar_musicas_descurtidas():
     global usuario_logado
@@ -202,8 +230,6 @@ def listar_musicas_descurtidas():
                 print(f"- {musica}")
         else:
             print("Você ainda não descurtida nenhuma música.")
-    else:
-        print("Você precisa fazer o login!")
 
 if __name__ == "__main__":
     main()
